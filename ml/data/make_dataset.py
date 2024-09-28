@@ -36,7 +36,6 @@ def clean_data(df):
     df = clean_price_column(df)
     df = handle_missing_price(df)
     df = convert_data_match_schema(df)
-    logger.info(df.isnull().sum())
     return df
 
 def select_columns(df):
