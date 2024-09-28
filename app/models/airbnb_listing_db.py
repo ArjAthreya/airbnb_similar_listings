@@ -54,6 +54,19 @@ class AirbnbListingDB:
 
         return [AirbnbListingDB.from_db_dict(row) for row in rows]
 
+    @staticmethod
+    def get_listings_in_cluster(id: int, db: Optional[AirbnbDatabase] = None) -> Optional[List[int]]:
+        if not db:
+            db = AirbnbDatabase()
+
+        query = "SELECT listings_in_cluster FROM listing WHERE id = :id"
+        row = db.fetch_data(query, {'id': id}, fetch_all=False)
+
+        if not row or 'listings_in_cluster' not in row:
+            return None
+
+        return [int(id_str) for id_str in row['listings_in_cluster'].split(',')]
+
     def save(self, db: Optional[AirbnbDatabase] = None):
         if not db:
             db = AirbnbDatabase()
@@ -126,5 +139,9 @@ if __name__ == '__main__':
     # Verify the new listing was saved
     saved_listing = AirbnbListingDB.get_by_id(9999, db)
     print(saved_listing)
+
+    # Get similar listings
+    similar_listings = AirbnbListingDB.get_listings_in_cluster(9999, db)
+    print(similar_listings)
 
     db.close_connection()

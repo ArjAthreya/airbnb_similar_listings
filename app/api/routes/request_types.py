@@ -21,21 +21,19 @@ async def get_listing(listing_id: int):
     except Exception as err:
         raise HTTPException(status_code=500, detail=f"Exception: {err}")
 
-# @router.get(
-#     "/health",
-#     response_model=HealthResponse,
-#     name="health:get-data",
-# )
-# async def health():
-#     is_health = False
-#     try:
-#         settings = Settings()
-#         test_input = MachineLearningDataInput(
-#             **json.loads(open(INPUT_EXAMPLE, "r").read())
-#         )
-#         test_point = test_input.get_np_array()
-#         get_prediction(test_point)
-#         is_health = True
-#         return HealthResponse(status=is_health)
-#     except Exception:
-#         raise HTTPException(status_code=404, detail="Unhealthy")
+@router.get(
+    "/listing/{listing_id}/similar",
+    response_model=list,
+    name="listing:get-similar",
+)
+async def get_similar_listings(listing_id: int):
+    try:
+        # Get similar listings directly using the class method
+        similar_listings = AirbnbListingDB.get_listings_in_cluster(listing_id)
+        
+        if not similar_listings:
+            raise HTTPException(status_code=404, detail="No similar listings found")
+        
+        return similar_listings
+    except Exception as err:
+        raise HTTPException(status_code=500, detail=f"Exception: {err}")
