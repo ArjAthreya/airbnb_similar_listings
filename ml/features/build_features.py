@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import os
 from pathlib import Path
 import pandas as pd
 import numpy as np
@@ -7,6 +8,9 @@ from sentence_transformers import SentenceTransformer
 from tqdm import tqdm
 from loguru import logger
 import torch
+from dotenv import load_dotenv
+
+load_dotenv()
 
 def create_overview(row):
     # Extract relevant fields
@@ -160,7 +164,7 @@ def pipeline(df):
     df['high_level_overview'] = df.apply(construct_high_level_overview, axis=1)
     
     # Load the Sentence Transformer model
-    model = SentenceTransformer('distilbert-base-nli-stsb-mean-tokens')
+    model = SentenceTransformer(os.getenv('SENTENCE_TRANSFORMER_MODEL'))
     device = torch.device('mps' if torch.backends.mps.is_available() else 'cpu')
     model.to(device)
     
@@ -172,7 +176,5 @@ def pipeline(df):
     # Calculate weighted average embeddings
     df = apply_weighted_average(df)
     
-    # Drop the average_embedding column
-    # df.drop(columns=['average_embedding'], inplace=True)
-
+    logger.info("Finished building features.")
     return df

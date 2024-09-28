@@ -7,8 +7,12 @@ import hdbscan
 from sklearn.cluster import DBSCAN
 from tqdm import tqdm
 from loguru import logger
+from dotenv import load_dotenv
+import os
 
-def apply_pca(valid_vectors_df, n_components):
+load_dotenv()
+
+def apply_pca(valid_vectors_df):
     """Apply PCA to reduce the dimensionality of the vector data."""
     pca = PCA(n_components='mle', svd_solver='full')
     reduced_data = pca.fit_transform(np.stack(valid_vectors_df['average_embedding'].values))
@@ -17,8 +21,8 @@ def apply_pca(valid_vectors_df, n_components):
 def perform_clustering_hdbscan(reduced_data):
     """Perform clustering on the dimensionality reduced data using HDBSCAN."""
     clusterer = hdbscan.HDBSCAN(
-        min_cluster_size=2,
-        min_samples=1,
+        min_cluster_size=os.getenv('MIN_CLUSTER_SIZE'),
+        min_samples=os.getenv('MIN_SAMPLES'),
         metric='euclidean',
         cluster_selection_epsilon=0.0
     )
@@ -39,17 +43,16 @@ def pipeline_clustering(df, use_pca=False):
     valid_vectors_df = df[df['average_embedding'].notnull()]
     
     # Apply PCA if enabled
-    if use_pca:
-        n_components = 10  # Adjust based on your needs
+    if os.getenv('USE_PCA') == 'True':
         logger.info("Applying PCA...")
-        reduced_data = apply_pca(valid_vectors_df, n_components)
+        reduced_data = apply_pca(valid_vectors_df)
     
         logger.info("Performing HDBSCAN clustering...")
         labels, clusterer = perform_clustering_hdbscan(reduced_data)
         # Add the cluster labels to the original DataFrame
         valid_vectors_df['cluster'] = labels
     else:
-        valid_vectors_df = perform_clustering_dbscan(valid_vectors_df, 0.93, 2)
+        valid_vectors_df = perform_clustering_dbscan(valid_vectors_df, os.getenv('SIMILARITY_THRESHOLD'), os.getenv('MIN_SAMPLES'))
 
     
     # Group listings by cluster
@@ -60,6 +63,6 @@ def pipeline_clustering(df, use_pca=False):
     # Merge cluster groups back to original DataFrame if needed
     valid_vectors_df = valid_vectors_df.merge(cluster_groups, on='cluster', how='left')
     
-    print(valid_vectors_df.head(3))
+    logger.info("Finished clustering process.")
 
     return valid_vectors_df

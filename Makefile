@@ -26,6 +26,9 @@ install: generate_dot_env
 	pip3 install poetry
 	poetry install --with dev
 
+create_db:
+	python3 app/core/database/launch_db.py
+
 run:
 	PYTHONPATH=app/ poetry run uvicorn main:app --reload --host 0.0.0.0 --port 8080
 

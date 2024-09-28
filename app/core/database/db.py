@@ -8,9 +8,12 @@ import sqlite3
 from contextlib import contextmanager
 from typing import List, Dict, Any, Generator
 from app.core.database.listing_schema_utils import LISTING_TABLE_SCHEMA
+from dotenv import load_dotenv
+
+load_dotenv()
 
 class AirbnbDatabase:
-    def __init__(self, db_path: str = "/Users/arjunathreya/Projects/airbnb_similar_listings/app/core/airbnb.db"):
+    def __init__(self, db_path: str = os.getenv('DB_PATH')):
         self.db_path = db_path
 
     @contextmanager
@@ -70,11 +73,11 @@ class AirbnbDatabase:
 
 def initialize_database():
     # For now, we'll use a local path to the database, will update to be generic (env variable)
-    if os.path.exists('/Users/arjunathreya/Projects/airbnb_similar_listings/app/core/airbnb.db'):
+    if os.path.exists(os.getenv('DB_PATH')):
         print("Database already exists.")
         return
 
-    os.makedirs(os.path.dirname('/Users/arjunathreya/Projects/airbnb_similar_listings/app/core/airbnb.db'), exist_ok=True)
+    os.makedirs(os.path.dirname(os.getenv('DB_PATH')), exist_ok=True)
     print('Initializing database...')
 
     db = AirbnbDatabase()

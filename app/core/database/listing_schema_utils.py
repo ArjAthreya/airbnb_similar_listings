@@ -5,12 +5,11 @@ import pandas as pd
 import urllib.request
 from pydantic import BaseModel, AnyUrl, HttpUrl
 from typing import Union, List, Optional
+from dotenv import load_dotenv
 
+load_dotenv()
 # Add parent directory to sys.path
 sys.path.append(str(Path(__file__).resolve().parent.parent.parent.parent))
-
-# For now, we'll use a local path to the cleaned listings csv
-CSV_LOCAL_PATH = Path('/Users/arjunathreya/Projects/airbnb_similar_listings/ml/data/dataset/') / 'listings.csv'
 
 LISTING_TABLE_SCHEMA = ('''
     id INTEGER PRIMARY KEY,
@@ -75,14 +74,15 @@ class Listing(BaseModel):
     cluster: int
     listings_in_cluster: str
 
-def load_listings(local_path: str = CSV_LOCAL_PATH) -> pd.DataFrame:
+def load_listings(local_path: str = os.getenv('NYC_CSV_FILEPATH')) -> pd.DataFrame:
     '''
     loads listings from a url and returns a dataframe with the relevant columns
     '''
+    print(local_path)
     data_df = pd.read_csv(local_path)
 
     return data_df
 
 if __name__ == '__main__':
-    df = load_listings(CSV_LOCAL_PATH)
+    df = load_listings(NYC_CSV_FILEPATH)
     print(f"Loaded {len(df)} listings")
