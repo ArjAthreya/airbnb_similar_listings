@@ -86,8 +86,7 @@ class LaunchDB:
         df = generate_embeddings(df)
 
         # Call the pipeline_clustering function after generating embeddings
-        # Keep PCA False for now
-        df = pipeline_clustering(df, use_pca=False)
+        df = pipeline_clustering(df)
 
         # Convert DataFrame to list of ListingItem objects
         listings = []

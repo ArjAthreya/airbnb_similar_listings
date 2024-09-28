@@ -18,13 +18,13 @@ def apply_pca(valid_vectors_df):
     reduced_data = pca.fit_transform(np.stack(valid_vectors_df['average_embedding'].values))
     return reduced_data
 
-def perform_clustering_hdbscan(reduced_data):
+def perform_clustering_hdbscan(reduced_data, similarity_threshold, min_cluster_size, min_samples):
     """Perform clustering on the dimensionality reduced data using HDBSCAN."""
     clusterer = hdbscan.HDBSCAN(
-        min_cluster_size=os.getenv('MIN_CLUSTER_SIZE'),
-        min_samples=os.getenv('MIN_SAMPLES'),
+        min_cluster_size=min_cluster_size,
+        min_samples=min_cluster_size,
         metric='euclidean',
-        cluster_selection_epsilon=0.0
+        cluster_selection_epsilon= 1 - similarity_threshold
     )
     labels = clusterer.fit_predict(reduced_data)
     return labels, clusterer
@@ -36,7 +36,7 @@ def perform_clustering_dbscan(valid_vectors_df, similarity_threshold, min_sample
     valid_vectors_df['cluster'] = db.fit_predict(np.stack(valid_vectors_df['average_embedding'].values))
     return valid_vectors_df
 
-def pipeline_clustering(df, use_pca=False):
+def pipeline_clustering(df):
     logger.info("Start clustering process.")
     
     # Filter out rows with null embeddings
@@ -48,11 +48,11 @@ def pipeline_clustering(df, use_pca=False):
         reduced_data = apply_pca(valid_vectors_df)
     
         logger.info("Performing HDBSCAN clustering...")
-        labels, clusterer = perform_clustering_hdbscan(reduced_data)
+        labels, clusterer = perform_clustering_hdbscan(reduced_data, float(os.getenv('SIMILARITY_THRESHOLD')), int(os.getenv('MIN_CLUSTER_SIZE')), int(os.getenv('MIN_SAMPLES')))
         # Add the cluster labels to the original DataFrame
         valid_vectors_df['cluster'] = labels
     else:
-        valid_vectors_df = perform_clustering_dbscan(valid_vectors_df, os.getenv('SIMILARITY_THRESHOLD'), os.getenv('MIN_SAMPLES'))
+        valid_vectors_df = perform_clustering_dbscan(valid_vectors_df, float(os.getenv('SIMILARITY_THRESHOLD')), int(os.getenv('MIN_SAMPLES')))
 
     
     # Group listings by cluster
