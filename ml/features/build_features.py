@@ -2,6 +2,7 @@
 from pathlib import Path
 import pandas as pd
 import numpy as np
+from sklearn.preprocessing import normalize
 from sentence_transformers import SentenceTransformer
 from tqdm import tqdm
 from loguru import logger
@@ -120,14 +121,21 @@ def generate_embeddings_with_progress(df, column_name, model, batch_size=32):
         batch_embeddings = model.encode(batch, convert_to_tensor=True)
         embeddings.extend(batch_embeddings.tolist())
 
-    df[f'{column_name}_embedding'] = embeddings
+    # Normalize the embeddings
+    normalized_embeddings = normalize(np.array(embeddings), norm='l2', axis=1)
+    
+    df[f'{column_name}_embedding'] = normalized_embeddings.tolist()
     return df
 
 def weighted_average_embedding(embeddings, weights):
     embeddings = [np.array(embedding) for embedding in embeddings]
     weighted_sum = np.sum([embedding * weight for embedding, weight in zip(embeddings, weights)], axis=0)
     weighted_avg_embedding = weighted_sum / np.sum(weights)
-    return weighted_avg_embedding
+    
+    # Normalize the weighted average embedding
+    normalized_avg_embedding = normalize(weighted_avg_embedding.reshape(1, -1), norm='l2', axis=1)[0]
+    
+    return normalized_avg_embedding
 
 def apply_weighted_average(df, weight_outline=0.5, weight_description=0.3, weight_overview=0.2):
     weights = [weight_outline, weight_description, weight_overview]
@@ -164,4 +172,7 @@ def pipeline(df):
     # Calculate weighted average embeddings
     df = apply_weighted_average(df)
     
+    # Drop the average_embedding column
+    # df.drop(columns=['average_embedding'], inplace=True)
+
     return df
