@@ -19,6 +19,7 @@ sentence-transformers = "^3.1.1"
 tqdm = "^4.66.5"
 hdbscan = "0.8.38.post1"
 torch = "2.2.2"
+python-dotenv = "^1.0.1"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.2"
