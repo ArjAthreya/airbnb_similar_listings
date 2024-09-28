@@ -10,7 +10,7 @@ from typing import Union, List, Optional
 sys.path.append(str(Path(__file__).resolve().parent.parent.parent.parent))
 
 # For now, we'll use a local path to the cleaned listings csv
-CSV_LOCAL_PATH = Path('/Users/arjunathreya/Projects/airbnb_similar_listings/ml/data/dataset/') / 'cleaned_listings.csv'
+CSV_LOCAL_PATH = Path('/Users/arjunathreya/Projects/airbnb_similar_listings/ml/data/dataset/') / 'listings.csv'
 
 LISTING_TABLE_SCHEMA = ('''
     id INTEGER PRIMARY KEY,
@@ -36,7 +36,12 @@ LISTING_TABLE_SCHEMA = ('''
     review_scores_communication REAL NOT NULL,
     review_scores_location REAL NOT NULL,
     review_scores_value REAL NOT NULL,
-    number_of_reviews INTEGER NOT NULL
+    number_of_reviews INTEGER NOT NULL,
+    description_summary TEXT NOT NULL, 
+    property_outline TEXT NOT NULL,
+    high_level_overview TEXT NOT NULL,
+    cluster INTEGER NOT NULL,
+    listings_in_cluster TEXT NOT NULL
 ''')
                         
 class Listing(BaseModel):
@@ -53,10 +58,10 @@ class Listing(BaseModel):
     longitude: float
     neighbourhood_group_cleansed: str
     neighbourhood_cleansed: str
-    neighborhood_overview: str
+    neighborhood_overview: Optional[str] = None
     description: str
     amenities: str
-    host_about: str
+    host_about: Optional[str] = None
     review_scores_rating: float
     review_scores_cleanliness: float
     review_scores_checkin: float
@@ -64,6 +69,11 @@ class Listing(BaseModel):
     review_scores_location: float
     review_scores_value: float
     number_of_reviews: int
+    description_summary: str
+    property_outline: str
+    high_level_overview: str
+    cluster: int
+    listings_in_cluster: str
 
 def load_listings(local_path: str = CSV_LOCAL_PATH) -> pd.DataFrame:
     '''

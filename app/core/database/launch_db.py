@@ -2,7 +2,10 @@ from db import AirbnbDatabase, initialize_database
 from listing_schema_utils import load_listings, Listing
 from typing import List
 import json
+import pandas as pd
 from ml.data.make_dataset import clean_data as make_dataset_clean_data
+from ml.features.build_features import pipeline as generate_embeddings
+from ml.model.similarity_search import pipeline_clustering
 
 CREATE_TABLE_QUERY = '''
 CREATE TABLE IF NOT EXISTS listing (
@@ -29,7 +32,12 @@ CREATE TABLE IF NOT EXISTS listing (
     review_scores_communication REAL NOT NULL,
     review_scores_location REAL NOT NULL,
     review_scores_value REAL NOT NULL,
-    number_of_reviews INTEGER NOT NULL
+    number_of_reviews INTEGER NOT NULL,
+    description_summary TEXT NOT NULL, 
+    property_outline TEXT NOT NULL,
+    high_level_overview TEXT NOT NULL,
+    cluster INTEGER NOT NULL,
+    listings_in_cluster TEXT NOT NULL
 )
 '''
 
@@ -40,14 +48,16 @@ INSERT OR REPLACE INTO listing (
     neighbourhood_group_cleansed, neighbourhood_cleansed, description,
     amenities, host_about, review_scores_rating, review_scores_cleanliness,
     review_scores_checkin, review_scores_communication, review_scores_location,
-    review_scores_value, number_of_reviews
+    review_scores_value, number_of_reviews, description_summary, property_outline, high_level_overview,
+    cluster, listings_in_cluster
 ) VALUES (
     :id, :listing_url, :price, :property_type, :room_type, :bathrooms_text,
     :bedrooms, :beds, :accommodates, :latitude, :longitude, :neighborhood_overview,
     :neighbourhood_group_cleansed, :neighbourhood_cleansed, :description,
     :amenities, :host_about, :review_scores_rating, :review_scores_cleanliness,
     :review_scores_checkin, :review_scores_communication, :review_scores_location,
-    :review_scores_value, :number_of_reviews
+    :review_scores_value, :number_of_reviews, :description_summary, :property_outline, :high_level_overview,
+    :cluster, :listings_in_cluster
 )
 '''
 
@@ -71,6 +81,13 @@ class LaunchDB:
 
         # Clean the data
         df = self.clean_data(df)
+
+        # Generate embeddings
+        df = generate_embeddings(df)
+
+        # Call the pipeline_clustering function after generating embeddings
+        # Keep PCA False for now
+        df = pipeline_clustering(df, use_pca=False)
 
         # Convert DataFrame to list of ListingItem objects
         listings = []
